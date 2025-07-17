@@ -3,13 +3,26 @@ console.log("starting the project")
 const express = require('express')
 const app = express()
 const port = 8955
-/*
-app.get('/', (req, res) => {
-  res.send('Hello  From server !')
+
+app.get('/user/:userId/:username/:password', (req, res) => {
+    console.log(req.params)
+  res.send({firstname:"prashant",lastname:"Praveen"})
 })
-*/
-app.use("/test",(req,res)=>{
+app.post('/user', (req, res) => {
+    console.log("Save data to the DataBase")
+    res.send("Data Saved Successfully")
+  })
+
+  app.delete('/user', (req, res) => {
+    console.log("Delete data to the DataBase")
+    res.send("Data delete Successfully")
+  })
+
+/*app.use("/test/test1",(req,res)=>{
     res.send('Hello  From server !')
+})
+app.use("/test",(req,res)=>{
+    res.send('Hello  From server test!')
 })
 app.use("/dashboard",(req,res)=>{
     res.send('Hello  From dashboard !')
@@ -17,9 +30,9 @@ app.use("/dashboard",(req,res)=>{
 
 app.use("/hello",(req,res)=>{
     res.send('Hello  Hello  hello!')
-})
-app.use((req,res)=>{
-    res.send('Namaste ')
+})*/
+app.use("/test",(req,res)=>{
+    res.send('Namaste 🙏 ')
 })
 app.listen(port, () => {
   console.log(`Server is Successfully  listening on port ${port}`)
