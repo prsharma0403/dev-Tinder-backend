@@ -4,11 +4,14 @@ const express = require("express");
 const connectDB = require("./config/database");
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
-//const { adminauth,userauth } = require('../middlewares/auth');
+const jwt = require("jsonwebtoken");
+const { adminauth, userauth } = require("../middlewares/auth");
 const app = express();
 const port = 8955;
 const User = require("./model/user");
 const { Error } = require("mongoose");
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
 connectDB()
   .then(() => {
     console.log("Database is connected now");
@@ -51,9 +54,13 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid credential");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
     await user.save();
     if (isPasswordValid) {
+      const token = await user.getJWT();
+      console.log(token);
+
+      res.cookie("token", token,{expires:new Date(Date.now()+8*3600000)});
       res.send("Login Successfully");
     } else {
       throw new Error("Invalid credential");
@@ -62,7 +69,24 @@ app.post("/login", async (req, res) => {
     res.status(400).send("ERROR!! " + err.message);
   }
 });
+app.get("/profile", userauth, async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      throw new Error("User doesnot exist");
+    }
+    console.log(user);
+    res.send(user);
+  } catch (err) {
+    res.status(400).send("something went wrong");
+  }
+});
+app.post("/sendConnectionRequest",userauth,async(req,res)=>{
+  console.log("Sending connection request");
+  const user=req.user;
+  res.send(user.firstname + "connection request Sent !!")
 
+})
 app.patch("/user/:userId", async (req, res) => {
   const userId = req.params?.userId;
   const data = req.body;
