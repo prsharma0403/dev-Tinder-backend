@@ -1,17 +1,25 @@
 console.log("starting the project");
-
 const express = require("express");
 const connectDB = require("./config/database");
-const { validateSignUpData } = require("./utils/validation");
-const bcrypt = require("bcrypt");
+const User = require('./model/user');
 const jwt = require("jsonwebtoken");
-const { adminauth, userauth } = require("../middlewares/auth");
 const app = express();
 const port = 8955;
-const User = require("./model/user");
 const { Error } = require("mongoose");
 const cookieParser = require("cookie-parser");
+const cors=require("cors");
+
 app.use(cookieParser());
+app.use(cors(
+  {origin:"http://localhost:5173/login",
+    credentials:true,}
+
+));
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
+const changepasswordRouter= require("./routes/password");
+
 connectDB()
   .then(() => {
     console.log("Database is connected now");
@@ -23,70 +31,12 @@ connectDB()
     console.log("Database Error");
   });
 app.use(express.json());
-app.post("/signup", async (req, res) => {
-  try {
-    console.log(req.body);
-    validateSignUpData(req);
-    const { password, firstname, lastname, email } = req.body;
-    const passwordHash = await bcrypt.hash(password, 10);
-    console.log(passwordHash);
-    const user = new User({
-      firstname,
-      lastname,
-      email,
-      password: passwordHash,
-    });
-
-    await user.save();
-    res.send("User create Successfully");
-  } catch (err) {
-    res.status(400).send("ERROR!! " + err.message);
-  }
-});
+app.use("/",authRouter);
+app.use("/",profileRouter);
+app.use("/",requestRouter);
+app.use("/",changepasswordRouter);
 /**Login user */
-app.post("/login", async (req, res) => {
-  console.log("login");
-  try {
-    const { password, email } = req.body;
-    const user = await User.findOne({ email: email });
-    console.log(user);
-    if (!user) {
-      throw new Error("Invalid credential");
-    }
 
-    const isPasswordValid = await user.validatePassword(password);
-    await user.save();
-    if (isPasswordValid) {
-      const token = await user.getJWT();
-      console.log(token);
-
-      res.cookie("token", token,{expires:new Date(Date.now()+8*3600000)});
-      res.send("Login Successfully");
-    } else {
-      throw new Error("Invalid credential");
-    }
-  } catch (err) {
-    res.status(400).send("ERROR!! " + err.message);
-  }
-});
-app.get("/profile", userauth, async (req, res) => {
-  try {
-    const user = req.user;
-    if (!user) {
-      throw new Error("User doesnot exist");
-    }
-    console.log(user);
-    res.send(user);
-  } catch (err) {
-    res.status(400).send("something went wrong");
-  }
-});
-app.post("/sendConnectionRequest",userauth,async(req,res)=>{
-  console.log("Sending connection request");
-  const user=req.user;
-  res.send(user.firstname + "connection request Sent !!")
-
-})
 app.patch("/user/:userId", async (req, res) => {
   const userId = req.params?.userId;
   const data = req.body;

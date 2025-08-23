@@ -13,4 +13,10 @@ const validateSignUpData = (req) => {
     throw new Error("Please Enter strong password");
   }
 };
-module.exports = { validateSignUpData };
+const validateProfileEdit=(req)=>{ 
+  const allowedEditField=["firstname","lastname", "state", "age", "city", "pincode","photoUrl", "about" ]
+  const isEditAllowed=Object.keys(req.body).every(field=>allowedEditField.includes(field))
+  console.log(isEditAllowed)
+  return isEditAllowed;
+}
+module.exports = { validateSignUpData ,validateProfileEdit};

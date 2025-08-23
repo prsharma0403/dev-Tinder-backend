@@ -22,10 +22,9 @@ const userSchema = new mongoose.Schema({
   age: { type: Number, min:18,},
   city: { type: String ,},
   pincode: { type: Number , },
-  gender:{type:String,validate(value){
-    if(!["male","female","other"].includes(value)){
-        throw new Error("Please  validate with the proper gender"+value)
-    }
+  gender:{type:String,enum:{
+    values:["male","female","other"],
+    message:`{VALUE} unsupported gender`
   }},
   photoUrl:{
     type:String,
